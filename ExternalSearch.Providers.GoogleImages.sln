@@ -1,0 +1,79 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B2A52533-7FBF-41FE-A0AF-874FC54300B2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{DBD1964B-DBD9-4C70-96CA-391C34B3D75F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "acceptance", "acceptance", "{5A324190-DAD7-4EEF-92AA-BC3E5712C80B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{E1A76004-11EB-44E0-B1D2-B197689E9265}"
+	ProjectSection(SolutionItems) = preProject
+		azure-pipelines.yml = azure-pipelines.yml
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{02641789-0D38-4DBB-9288-23592CF55D25}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet.config = NuGet.config
+		packages.props = packages.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code Style", "Code Style", "{2C3AECCF-DCB5-4ED7-8B7B-8F373EDE3A5E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Git", "Git", "{17EE3C8D-BAE4-481A-B9CC-1BE878E86124}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.GoogleImages.Integration.Tests", "test\integration\Integration.Tests\ExternalSearch.GoogleImages.Integration.Tests.csproj", "{8CBDF6EB-A861-466E-932B-04CA5917923C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.GoogleImages", "src\ExternalSearch.Providers.GoogleImages\ExternalSearch.Providers.GoogleImages.csproj", "{998CD3A8-DF37-4B8F-A519-D805D98E92B3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Provider.ExternalSearch.GoogleImages", "src\ExternalSearch.Providers.GoogleImages.Provider\Provider.ExternalSearch.GoogleImages.csproj", "{76FE5F98-D73D-4175-8936-42BDD012F0BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8CBDF6EB-A861-466E-932B-04CA5917923C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CBDF6EB-A861-466E-932B-04CA5917923C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CBDF6EB-A861-466E-932B-04CA5917923C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CBDF6EB-A861-466E-932B-04CA5917923C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{998CD3A8-DF37-4B8F-A519-D805D98E92B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{998CD3A8-DF37-4B8F-A519-D805D98E92B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{998CD3A8-DF37-4B8F-A519-D805D98E92B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{998CD3A8-DF37-4B8F-A519-D805D98E92B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76FE5F98-D73D-4175-8936-42BDD012F0BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76FE5F98-D73D-4175-8936-42BDD012F0BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76FE5F98-D73D-4175-8936-42BDD012F0BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76FE5F98-D73D-4175-8936-42BDD012F0BE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E1A76004-11EB-44E0-B1D2-B197689E9265} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
+		{02641789-0D38-4DBB-9288-23592CF55D25} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
+		{2C3AECCF-DCB5-4ED7-8B7B-8F373EDE3A5E} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
+		{17EE3C8D-BAE4-481A-B9CC-1BE878E86124} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
+		{8CBDF6EB-A861-466E-932B-04CA5917923C} = {DBD1964B-DBD9-4C70-96CA-391C34B3D75F}
+		{998CD3A8-DF37-4B8F-A519-D805D98E92B3} = {B2A52533-7FBF-41FE-A0AF-874FC54300B2}
+		{76FE5F98-D73D-4175-8936-42BDD012F0BE} = {B2A52533-7FBF-41FE-A0AF-874FC54300B2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A61CB42-80C5-4A83-AC3E-DA41FC875525}
+	EndGlobalSection
+EndGlobal

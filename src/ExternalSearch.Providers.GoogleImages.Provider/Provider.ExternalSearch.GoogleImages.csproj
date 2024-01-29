@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <Compile Remove="Resources\**" />
+      <EmbeddedResource Remove="Resources\**" />
+      <None Remove="Resources\**" />
+    </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CluedIn.Core" />
+    <PackageReference Include="ComponentHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExternalSearch.Providers.GoogleImages\ExternalSearch.Providers.GoogleImages.csproj" />
+    <ProjectReference Include="..\ExternalSearch.Providers.GoogleMaps\ExternalSearch.Providers.GoogleImages.csproj" />
+  </ItemGroup>
+
+</Project>
