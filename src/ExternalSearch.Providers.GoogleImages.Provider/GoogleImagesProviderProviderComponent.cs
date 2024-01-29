@@ -6,7 +6,7 @@ using CluedIn.Core.Server;
 using ComponentHost;
 using Constants = CluedIn.ExternalSearch.Providers.GoogleImages.Constants;
 
-namespace CluedIn.Provider.GoogleImages
+namespace CluedIn.Provider.ExternalSearch.GoogleImages
 {
     [Component(Constants.ComponentName, "Providers", ComponentType.Service, ServerComponents.ProviderWebApi, Components.Server, Components.DataStores, Isolation = ComponentIsolation.NotIsolated)]
     public sealed class GoogleImagesProviderProviderComponent : ServiceApplicationComponent<IServer>

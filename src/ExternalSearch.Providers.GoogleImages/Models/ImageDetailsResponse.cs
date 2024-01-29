@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
 
-namespace CluedIn.ExternalSearch.Providers.GoogleMaps.Models.Companies
+namespace CluedIn.ExternalSearch.Providers.GoogleImages.Models
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class Context

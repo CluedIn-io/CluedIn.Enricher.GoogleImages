@@ -12,7 +12,7 @@ using CluedIn.Core.Data.Relational;
 using CluedIn.Core.Providers;
 using EntityType = CluedIn.Core.Data.EntityType;
 using CluedIn.Core.Data.Vocabularies;
-using CluedIn.ExternalSearch.Providers.GoogleMaps.Models.Companies;
+using CluedIn.ExternalSearch.Providers.GoogleImages.Models;
 
 namespace CluedIn.ExternalSearch.Providers.GoogleImages
 {
