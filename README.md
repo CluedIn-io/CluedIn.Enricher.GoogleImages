@@ -1,18 +1,18 @@
-# CluedIn.Enricher.GoogleMaps
+# CluedIn.Enricher.GoogleImages
 
-CluedIn External Search for Google Maps Crawler.
+CluedIn External Search for Google Images Enricher.
 
 ------
 
 ## Overview
 
-This repository contains the code and associated tests for bucketing addresses based of Entities and Clues that have set a value for the Organization.Address core vocabulary. 
+This repository contains the code and associated tests for enriching with images based of Entities and Clues that have set a value for a vocabulary. 
 
 ## Usage
 
 ### NuGet Packages
 
-To use the `Google Maps` External Search with the `CluedIn` server you will have to add the CluedIn.Enricher.Web nuget package to your environment.
+To use the `Google Images` External Search with the `CluedIn` server you will have to add the CluedIn.Enricher.GoogleImages nuget package to your environment.
 
 ### Running Tests
 
@@ -25,8 +25,8 @@ docker-compose up --build -d
 Use the following commands to run all `Unit` and `Integration` tests within the repository:
 
 ```Shell
-dotnet test .\ExternalSearch.GoogleMaps.sln --filter Unit
-dotnet test .\ExternalSearch.GoogleMaps.sln --filter Integration
+dotnet test .\ExternalSearch.GoogleImages.sln --filter Unit
+dotnet test .\ExternalSearch.GoogleImages.sln --filter Integration
 ```
 
 To run [Pester](https://github.com/pester/Pester) `acceptance` tests
