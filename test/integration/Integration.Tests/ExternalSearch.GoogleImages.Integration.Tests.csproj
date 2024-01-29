@@ -5,6 +5,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\ExternalSearch.Providers.GoogleImages\ExternalSearch.Providers.GoogleImages.csproj" />
-    <ProjectReference Include="..\..\..\src\ExternalSearch.Providers.GoogleMaps\ExternalSearch.Providers.GoogleImages.csproj" />
   </ItemGroup>
 </Project>

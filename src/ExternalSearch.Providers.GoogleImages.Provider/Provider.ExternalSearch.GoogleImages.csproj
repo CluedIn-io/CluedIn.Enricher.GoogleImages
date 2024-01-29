@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ExternalSearch.Providers.GoogleImages\ExternalSearch.Providers.GoogleImages.csproj" />
-    <ProjectReference Include="..\ExternalSearch.Providers.GoogleMaps\ExternalSearch.Providers.GoogleImages.csproj" />
   </ItemGroup>
 
 </Project>
