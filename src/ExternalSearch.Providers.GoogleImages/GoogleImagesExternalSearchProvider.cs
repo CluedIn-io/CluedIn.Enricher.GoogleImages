@@ -123,7 +123,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             {
                 var name = query.QueryParameters["companyName"].FirstOrDefault();
                 var key = apiKey;
-                var request = new RestRequest($"key={key}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.GET);
+                var request = new RestRequest($"?key={key}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.GET);
            
                 var response = client.ExecuteTaskAsync<ImageDetailsResponse>(request).Result;
                
@@ -194,8 +194,8 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <param name="request">The request.</param>
         /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
-        {
-            return null;
+        { 
+            return this.DownloadPreviewImageBlob<ImageDetailsResponse>(context, result, r => r.Data.items.First().link);
         }
 
   
