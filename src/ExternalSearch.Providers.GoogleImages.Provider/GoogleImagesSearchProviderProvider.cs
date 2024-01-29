@@ -13,7 +13,7 @@ using CluedIn.ExternalSearch.Providers.GoogleImages;
 using CluedIn.Providers.Models;
 using Constants = CluedIn.ExternalSearch.Providers.GoogleImages.Constants;
 
-namespace CluedIn.Provider.GoogleImages
+namespace CluedIn.Provider.ExternalSearch.GoogleImages
 {
     public class GoogleImagesSearchProviderProvider : ProviderBase, IExtendedProviderMetadata, IExternalSearchProviderProvider
     {
