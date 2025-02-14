@@ -235,7 +235,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider)
         {
             var customTypes = config[Constants.KeyName.AcceptedEntityType].ToString();
-            if (string.IsNullOrWhiteSpace(customTypes))
+            if (!string.IsNullOrWhiteSpace(customTypes))
             {
                 AcceptedEntityTypes = new EntityType[] { config[Constants.KeyName.AcceptedEntityType].ToString() };
             };
