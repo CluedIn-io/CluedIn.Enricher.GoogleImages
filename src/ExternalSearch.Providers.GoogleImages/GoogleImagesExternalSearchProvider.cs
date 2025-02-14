@@ -119,27 +119,24 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         {
             var client = new RestClient("https://www.googleapis.com/customsearch/v1");
 
-            if (query.QueryParameters.ContainsKey("companyName"))
-            {
-                var name = query.QueryParameters["companyName"].FirstOrDefault();
-                var key = apiKey;
-                var request = new RestRequest($"?key={key}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.GET);
+            if (!query.QueryParameters.TryGetValue("companyName", out var parameter)) yield break;
+            var name = parameter.FirstOrDefault();
+            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.GET);
            
-                var response = client.ExecuteTaskAsync<ImageDetailsResponse>(request).Result;
+            var response = client.ExecuteAsync<ImageDetailsResponse>(request).Result;
                
-                if (response.StatusCode == HttpStatusCode.OK)
-                {
-                    if (response.Data != null)
-                        yield return new ExternalSearchQueryResult<ImageDetailsResponse>(query, response.Data);
-                }
-                else if (response.StatusCode == HttpStatusCode.NoContent || response.StatusCode == HttpStatusCode.NotFound)
-                    yield break;
-                else if (response.ErrorException != null)
-                    throw new AggregateException(response.ErrorException.Message, response.ErrorException);
-                else
-                    throw new ApplicationException("Could not execute external search query - StatusCode:" + response.StatusCode + "; Content: " + response.Content);
-            }        
-            
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                if (response.Data == null) yield break;
+                response.Data.items.RemoveAll(x => x.fileFormat == "image/"); // remove empty mimetype items
+                yield return new ExternalSearchQueryResult<ImageDetailsResponse>(query, response.Data);
+            }
+            else if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotFound)
+                yield break;
+            else if (response.ErrorException != null)
+                throw new AggregateException(response.ErrorException.Message, response.ErrorException);
+            else
+                throw new ApplicationException("Could not execute external search query - StatusCode:" + response.StatusCode + "; Content: " + response.Content);
         }
 
         /// <summary>Builds the clues.</summary>
@@ -152,7 +149,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         {
 
            if (result is IExternalSearchQueryResult<ImageDetailsResponse> companyResult)
-            {
+           {
 
                 var code = this.GetOrganizationOriginEntityCode(companyResult, request);
 
@@ -163,11 +160,9 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                 // TODO: If necessary, you can create multiple clues and return them.
 
                 return new[] { clue };
-            }
+           }
 
-            return null;
-
-
+           return null;
         }
 
         /// <summary>Gets the primary entity metadata.</summary>
