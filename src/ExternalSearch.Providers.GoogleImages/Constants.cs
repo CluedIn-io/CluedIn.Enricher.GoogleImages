@@ -36,7 +36,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                 },
                 new Control()
                 {
-                    displayName = "Accepted Entity Type",
+                    displayName = "Accepted Business Domain",
                     type = "input",
                     isRequired = false,
                     name = KeyName.AcceptedEntityType
