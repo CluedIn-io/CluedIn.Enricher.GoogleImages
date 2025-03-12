@@ -6,6 +6,14 @@
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\google-icon-logo.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\google-icon-logo.svg" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="CluedIn.ExternalSearch" />
         <PackageReference Include="CluedIn.Crawling" />

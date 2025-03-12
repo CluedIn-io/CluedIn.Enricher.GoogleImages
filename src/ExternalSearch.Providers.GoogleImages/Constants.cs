@@ -23,20 +23,23 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         public static string Icon { get; set; } = "Resources.google-icon-logo.svg";
         public static string Domain { get; set; } = "N/A";
 
+        private static Version _cluedInVersion;
+        public static Version CluedInVersion => _cluedInVersion ??= typeof(Core.Constants).Assembly.GetName().Version;
+        public static string EntityTypeLabel => CluedInVersion < new Version(4, 5, 0) ? "Entity Type" : "Business Domain";
         public static AuthMethods AuthMethods { get; set; } = new AuthMethods
         {
             token = new List<Control>()
             {
                 new Control()
                 {
-                    displayName = "Api Key",
+                    displayName = "API Key",
                     type = "input",
                     isRequired = true,
                     name = KeyName.ApiToken
                 },
                 new Control()
                 {
-                    displayName = "Accepted Entity Type",
+                    displayName = $"Accepted {EntityTypeLabel}",
                     type = "input",
                     isRequired = false,
                     name = KeyName.AcceptedEntityType
