@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
-namespace CluedIn.ExternalSearch.Providers.GoogleImages.Models
-{
+namespace CluedIn.ExternalSearch.Providers.GoogleImages.Models;
+
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class Context
     {
@@ -90,7 +90,3 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages.Models
         public string type { get; set; }
         public string template { get; set; }
     }
-
-
-
-}
