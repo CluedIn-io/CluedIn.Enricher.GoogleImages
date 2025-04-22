@@ -26,45 +26,35 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         private static Version _cluedInVersion;
         public static Version CluedInVersion => _cluedInVersion ??= typeof(Core.Constants).Assembly.GetName().Version;
         public static string EntityTypeLabel => CluedInVersion < new Version(4, 5, 0) ? "Entity Type" : "Business Domain";
-        public static AuthMethods AuthMethods { get; set; } = new AuthMethods
+        public static AuthMethods AuthMethods { get; set; } = new()
         {
-            token = new List<Control>()
+            Token = new List<Control>
             {
-                new Control()
+                new()
                 {
-                    displayName = "API Key",
-                    type = "input",
-                    isRequired = true,
-                    name = KeyName.ApiToken
+                    DisplayName = "API Key",
+                    Type = "input",
+                    IsRequired = true,
+                    Name = KeyName.ApiToken
                 },
-                new Control()
+                new()
                 {
-                    displayName = $"Accepted {EntityTypeLabel}",
-                    type = "input",
-                    isRequired = false,
-                    name = KeyName.AcceptedEntityType
+                    DisplayName = $"Accepted {EntityTypeLabel}",
+                    Type = "input",
+                    IsRequired = false,
+                    Name = KeyName.AcceptedEntityType
                 },
-                new Control()
+                new()
                 {
-                    displayName = "Image Search Text",
-                    type = "input",
-                    isRequired = false,
-                    name = KeyName.ImageSearch
+                    DisplayName = "Image Search Text",
+                    Type = "input",
+                    IsRequired = false,
+                    Name = KeyName.ImageSearch
                 }
             }
         };
 
-        public static IEnumerable<Control> Properties { get; set; } = new List<Control>()
-        {
-            // NOTE: Leaving this commented as an example - BF
-            //new()
-            //{
-            //    displayName = "Some Data",
-            //    type = "input",
-            //    isRequired = true,
-            //    name = "someData"
-            //}
-        };
+        public static IEnumerable<Control> Properties { get; set; } = new List<Control>();
 
         public static Guide Guide { get; set; } = null;
         public static IntegrationType IntegrationType { get; set; } = IntegrationType.Enrichment;
