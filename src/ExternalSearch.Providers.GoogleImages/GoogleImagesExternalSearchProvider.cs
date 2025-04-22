@@ -1,23 +1,26 @@
-﻿using CluedIn.Core;
+using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
+using CluedIn.Core.Data.Vocabularies;
+using CluedIn.Core.Data.Relational;
 using CluedIn.Core.ExternalSearch;
+using CluedIn.Core.Providers;
+using CluedIn.Core.Connectors;
+using CluedIn.ExternalSearch.Providers.GoogleImages.Models;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using CluedIn.Core.Data.Relational;
-using CluedIn.Core.Providers;
+using System.Text.RegularExpressions;
+
 using EntityType = CluedIn.Core.Data.EntityType;
-using CluedIn.Core.Data.Vocabularies;
-using CluedIn.ExternalSearch.Providers.GoogleImages.Models;
 
 namespace CluedIn.ExternalSearch.Providers.GoogleImages
 {
     /// <summary>The google image external search provider.</summary>
     /// <seealso cref="CluedIn.ExternalSearch.ExternalSearchProviderBase" />
-    public class GoogleImagesExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider
+    public class GoogleImagesExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider, IExternalSearchProviderWithVerifyConnection
     {
         private static EntityType[] AcceptedEntityTypes = [EntityType.Organization];
 
@@ -214,6 +217,50 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             }
 
             return AcceptedEntityTypes;
+        }
+
+        public ConnectionVerificationResult VerifyConnection(ExecutionContext context, IReadOnlyDictionary<string, object> config)
+        {
+            IDictionary<string, object> configDict = config.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var jobData = new GoogleImagesExternalSearchJobData(configDict);
+            var apiToken = jobData.ApiToken;
+            var client = new RestClient("https://www.googleapis.com/customsearch/v1");
+            
+            var request = new RestRequest($"?key={apiToken}&cx=000950167190857528722:vf0rypkbf0w&q=Google&searchType=image", Method.GET);
+
+            var response = client.ExecuteAsync<ImageDetailsResponse>(request).Result;
+
+            if (response.StatusCode != HttpStatusCode.OK) return ConstructVerifyConnectionResponse(response);
+            return response.Data == null ? new ConnectionVerificationResult(true, string.Empty) : ConstructVerifyConnectionResponse(response);
+        }
+
+        private static ConnectionVerificationResult ConstructVerifyConnectionResponse(IRestResponse response)
+        {
+            var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
+
+            if (response.ErrorException != null)
+            {
+                return new ConnectionVerificationResult(
+                    false,
+                    $"{errorMessageBase} {(!string.IsNullOrWhiteSpace(response.ErrorException.Message) ? response.ErrorException.Message : "This could be due to breaking changes in the external system")}."
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Content) && response.Content.Contains("API_KEY_INVALID"))
+            {
+                return new ConnectionVerificationResult(false, $"{errorMessageBase} This could be due to an invalid API key.");
+            }
+
+            var regex = new Regex(@"\<(html|head|body|div|span|img|p\>|a href)", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace);
+            var isHtml = regex.IsMatch(response.Content ?? string.Empty);
+
+            var errorMessage = response.IsSuccessful
+                ? string.Empty
+                : string.IsNullOrWhiteSpace(response.Content) || isHtml
+                    ? $"{errorMessageBase} This could be due to breaking changes in the external system."
+                    : $"{errorMessageBase} {response.Content}.";
+
+            return new ConnectionVerificationResult(response.IsSuccessful, errorMessage);
         }
 
         public IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
