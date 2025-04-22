@@ -92,7 +92,9 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         };
 
         public static IEnumerable<Control> Properties { get; set; } = new List<Control>();
+
         public static Guide Guide { get; set; } = new() { Instructions = Instruction };
+
         public static IntegrationType IntegrationType { get; set; } = IntegrationType.Enrichment;
     }
 }
