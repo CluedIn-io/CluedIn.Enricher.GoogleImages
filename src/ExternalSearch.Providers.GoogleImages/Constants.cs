@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CluedIn.Core.Data.Relational;
 using CluedIn.Core.Providers;
