@@ -33,21 +33,21 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                 new()
                 {
                     DisplayName = "API Key",
-                    Type = "input",
+                    Type = "password",
                     IsRequired = true,
                     Name = KeyName.ApiToken
                 },
                 new()
                 {
                     DisplayName = $"Accepted {EntityTypeLabel}",
-                    Type = "input",
-                    IsRequired = false,
+                    Type = "entityTypeSelector",
+                    IsRequired = true,
                     Name = KeyName.AcceptedEntityType
                 },
                 new()
                 {
                     DisplayName = "Image Search Text",
-                    Type = "input",
+                    Type = "vocabularyKeySelector",
                     IsRequired = false,
                     Name = KeyName.ImageSearch
                 }
