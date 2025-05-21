@@ -54,7 +54,7 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
             return Task.FromResult(true);
         }
 
-        public override Task<ExpectedStatistics> FetchUnSyncedEntityStatistics(Core.ExecutionContext context, IDictionary<string, object> configuration, Guid organizationId, Guid userId, Guid providerDefinitionId)
+        public override Task<ExpectedStatistics> FetchUnSyncedEntityStatistics(ExecutionContext context, IDictionary<string, object> configuration, Guid organizationId, Guid userId, Guid providerDefinitionId)
         {
             throw new NotImplementedException();
         }
@@ -75,7 +75,7 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
             return GetHelperConfiguration(context, jobData, organizationId, userId, providerDefinitionId);
         }
 
-        public override Task<AccountInformation> GetAccountInformation(Core.ExecutionContext context, CrawlJobData jobData, Guid organizationId, Guid userId, Guid providerDefinitionId)
+        public override Task<AccountInformation> GetAccountInformation(ExecutionContext context, CrawlJobData jobData, Guid organizationId, Guid userId, Guid providerDefinitionId)
         {
             return Task.FromResult(new AccountInformation(providerDefinitionId.ToString(), providerDefinitionId.ToString()));
         }
@@ -85,22 +85,22 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
             return $"{relativeDateTime.Minute} 0/23 * * *";
         }
 
-        public override Task<IEnumerable<WebHookSignature>> CreateWebHook(Core.ExecutionContext context, CrawlJobData jobData, IWebhookDefinition webhookDefinition, IDictionary<string, object> config)
+        public override Task<IEnumerable<WebHookSignature>> CreateWebHook(ExecutionContext context, CrawlJobData jobData, IWebhookDefinition webhookDefinition, IDictionary<string, object> config)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<IEnumerable<WebhookDefinition>> GetWebHooks(Core.ExecutionContext context)
+        public override Task<IEnumerable<WebhookDefinition>> GetWebHooks(ExecutionContext context)
         {
             throw new NotImplementedException();
         }
 
-        public override Task DeleteWebHook(Core.ExecutionContext context, CrawlJobData jobData, IWebhookDefinition webhookDefinition)
+        public override Task DeleteWebHook(ExecutionContext context, CrawlJobData jobData, IWebhookDefinition webhookDefinition)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<CrawlLimit> GetRemainingApiAllowance(Core.ExecutionContext context, CrawlJobData jobData, Guid organizationId, Guid userId, Guid providerDefinitionId)
+        public override Task<CrawlLimit> GetRemainingApiAllowance(ExecutionContext context, CrawlJobData jobData, Guid organizationId, Guid userId, Guid providerDefinitionId)
         {
             if (jobData == null) throw new ArgumentNullException(nameof(jobData));
             return Task.FromResult(new CrawlLimit(-1, TimeSpan.Zero));

@@ -1,26 +1,28 @@
-﻿using CluedIn.Core;
+using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
+using CluedIn.Core.Data.Vocabularies;
+using CluedIn.Core.Data.Relational;
 using CluedIn.Core.ExternalSearch;
+using CluedIn.Core.Providers;
+using CluedIn.Core.Connectors;
+using CluedIn.ExternalSearch.Providers.GoogleImages.Models;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Web;
-using CluedIn.Core.Data.Relational;
-using CluedIn.Core.Providers;
+using System.Text.RegularExpressions;
+
 using EntityType = CluedIn.Core.Data.EntityType;
-using CluedIn.Core.Data.Vocabularies;
-using CluedIn.ExternalSearch.Providers.GoogleImages.Models;
 
 namespace CluedIn.ExternalSearch.Providers.GoogleImages
 {
-    /// <summary>The googlemaps graph external search provider.</summary>
+    /// <summary>The google image external search provider.</summary>
     /// <seealso cref="CluedIn.ExternalSearch.ExternalSearchProviderBase" />
-    public class GoogleImagesExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider
+    public class GoogleImagesExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider, IExternalSearchProviderWithVerifyConnection
     {
-        private static EntityType[] AcceptedEntityTypes = { EntityType.Organization };
+        private static EntityType[] AcceptedEntityTypes = [EntityType.Organization];
 
         /**********************************************************************************************************
          * CONSTRUCTORS
@@ -32,6 +34,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             var nameBasedTokenProvider = new NameBasedTokenProvider("GoogleImages");
 
             if (nameBasedTokenProvider.ApiToken != null)
+                // ReSharper disable once VirtualMemberCallInConstructor
                 this.TokenProvider = new RoundRobinTokenProvider(nameBasedTokenProvider.ApiToken.Split(',', ';'));
         }
 
@@ -45,14 +48,13 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <returns>The search queries.</returns>
         public override IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request)
         {
-            foreach (var externalSearchQuery in InternalBuildQueries(context, request))
-            {
-                yield return externalSearchQuery;
-            }
+            return InternalBuildQueries(context, request);
         }
+
+        // ReSharper disable once UnusedParameter.Local
         private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, IDictionary<string, object> config = null)
         {
-            if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType?.ToString()))
+            if (config != null && config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType?.ToString()))
             {
                 if (!request.EntityMetaData.EntityType.Is(customType.ToString()))
                 {
@@ -64,18 +66,11 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
 
             var existingResults = request.GetQueryResults<ImageDetailsResponse>(this).ToList();
 
-            bool NameFilter(string value)
-            {
-                return existingResults.Any(r => string.Equals(r.Data.queries.request.First().searchTerms, value, StringComparison.InvariantCultureIgnoreCase));
-            }
-
             var entityType = request.EntityMetaData.EntityType;
 
-            var organizationName = GetValue(request, config, Constants.KeyName.ImageSearch, Core.Data.Vocabularies.Vocabularies.CluedInOrganization.OrganizationName);
+            var organizationName = GetValue(request, config, Constants.KeyName.ImageSearch, Vocabularies.CluedInOrganization.OrganizationName);
 
-
-
-            if (organizationName != null && organizationName.Count > 0)
+            if (organizationName is { Count: > 0 })
             {
                 foreach (var nameValue in organizationName.Where(v => !NameFilter(v)))
                 {
@@ -86,7 +81,13 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                     yield return new ExternalSearchQuery(this, entityType, companyDict);
                 }
             }
-           
+
+            yield break;
+
+            bool NameFilter(string value)
+            {
+                return existingResults.Any(r => string.Equals(r.Data.queries.request.First().searchTerms, value, StringComparison.InvariantCultureIgnoreCase));
+            }
         }
 
         private static HashSet<string> GetValue(IExternalSearchRequest request, IDictionary<string, object> config, string keyName, VocabularyKey defaultKey)
@@ -131,12 +132,18 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                 response.Data.items.RemoveAll(x => x.fileFormat == "image/"); // remove empty mimetype items
                 yield return new ExternalSearchQueryResult<ImageDetailsResponse>(query, response.Data);
             }
-            else if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.NotFound)
-                yield break;
-            else if (response.ErrorException != null)
-                throw new AggregateException(response.ErrorException.Message, response.ErrorException);
-            else
-                throw new ApplicationException("Could not execute external search query - StatusCode:" + response.StatusCode + "; Content: " + response.Content);
+            else switch (response.StatusCode)
+            {
+                case HttpStatusCode.NoContent or HttpStatusCode.NotFound:
+                    yield break;
+                default:
+                {
+                    if (response.ErrorException != null)
+                        throw new AggregateException(response.ErrorException.Message, response.ErrorException);
+
+                    throw new ApplicationException("Could not execute external search query - StatusCode:" + response.StatusCode + "; Content: " + response.Content);
+                }
+            }
         }
 
         /// <summary>Builds the clues.</summary>
@@ -146,23 +153,17 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <param name="request">The request.</param>
         /// <returns>The clues.</returns>
         public override IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request)
-        {
+        { 
+            if (result is not IExternalSearchQueryResult<ImageDetailsResponse> companyResult) return null;
+           
+            var code = new EntityCode(request.EntityMetaData.EntityType, "googleimages", $"{query.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+            var clue = new Clue(code, context.Organization);
 
-           if (result is IExternalSearchQueryResult<ImageDetailsResponse> companyResult)
-           {
+            PopulateCompanyMetadata(clue.Data.EntityData, companyResult, request);
+            DownloadPreviewImage(context, companyResult.Data.items.First().link, clue);
+            // TODO: If necessary, you can create multiple clues and return them.
 
-                var code = this.GetOrganizationOriginEntityCode(companyResult, request);
-
-                var clue = new Clue(code, context.Organization);
-
-                this.PopulateCompanyMetadata(clue.Data.EntityData, companyResult, request);
-                this.DownloadPreviewImage(context, companyResult.Data.items.First().link, clue);
-                // TODO: If necessary, you can create multiple clues and return them.
-
-                return new[] { clue };
-           }
-
-           return null;
+            return [clue];
         }
 
         /// <summary>Gets the primary entity metadata.</summary>
@@ -172,15 +173,9 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <returns>The primary entity metadata.</returns>
         public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
         {
+            if (result is not IExternalSearchQueryResult<ImageDetailsResponse> companyResult) return null;
 
-            if (result is IExternalSearchQueryResult<ImageDetailsResponse> companyResult)
-            {
-                if (companyResult.Data.items != null)
-                {
-                    return this.CreateCompanyMetadata(companyResult, request);
-                }
-            }
-            return null;
+            return companyResult.Data.items != null ? CreateCompanyMetadata(companyResult, request) : null;
         }
 
         /// <summary>Gets the preview image.</summary>
@@ -190,45 +185,26 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
         { 
-            return this.DownloadPreviewImageBlob<ImageDetailsResponse>(context, result, r => r.Data.items.First().link);
+            return DownloadPreviewImageBlob<ImageDetailsResponse>(context, result, r => r.Data.items.First().link);
         }
 
-  
-
-        private IEntityMetadata CreateCompanyMetadata(IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
+        private static IEntityMetadata CreateCompanyMetadata(IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
         {
             var metadata = new EntityMetadataPart();
 
-            this.PopulateCompanyMetadata(metadata, resultItem, request);
+            PopulateCompanyMetadata(metadata, resultItem, request);
 
             return metadata;
         }
 
-
-      
-        private EntityCode GetOrganizationOriginEntityCode(IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
+        // ReSharper disable once UnusedParameter.Local
+        private static void PopulateCompanyMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
         {
-
-            return new EntityCode(request.EntityMetaData.EntityType, this.GetCodeOrigin(), request.EntityMetaData.OriginEntityCode.Value);
-        }
-
-        /// <summary>Gets the code origin.</summary>
-        /// <returns>The code origin</returns>
-        private CodeOrigin GetCodeOrigin()
-        {
-            return CodeOrigin.CluedIn.CreateSpecific("googleimages");
-        }
-
-       
-
-        private void PopulateCompanyMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
-        {
-            var code = this.GetOrganizationOriginEntityCode(resultItem, request);
+            var code = new EntityCode(request.EntityMetaData.EntityType, "googleimages", $"{request.Queries.FirstOrDefault()?.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
 
             metadata.EntityType = request.EntityMetaData.EntityType;
             metadata.Name = request.EntityMetaData.Name;
             metadata.OriginEntityCode = code;
-            metadata.Codes.Add(code);
             metadata.Codes.Add(request.EntityMetaData.OriginEntityCode);
         }
 
@@ -237,10 +213,54 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             var customTypes = config[Constants.KeyName.AcceptedEntityType].ToString();
             if (!string.IsNullOrWhiteSpace(customTypes))
             {
-                AcceptedEntityTypes = new EntityType[] { config[Constants.KeyName.AcceptedEntityType].ToString() };
-            };
+                AcceptedEntityTypes = [config[Constants.KeyName.AcceptedEntityType].ToString()];
+            }
 
             return AcceptedEntityTypes;
+        }
+
+        public ConnectionVerificationResult VerifyConnection(ExecutionContext context, IReadOnlyDictionary<string, object> config)
+        {
+            IDictionary<string, object> configDict = config.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var jobData = new GoogleImagesExternalSearchJobData(configDict);
+            var apiToken = jobData.ApiToken;
+            var client = new RestClient("https://www.googleapis.com/customsearch/v1");
+            
+            var request = new RestRequest($"?key={apiToken}&cx=000950167190857528722:vf0rypkbf0w&q=Google&searchType=image", Method.GET);
+
+            var response = client.ExecuteAsync<ImageDetailsResponse>(request).Result;
+
+            if (response.StatusCode != HttpStatusCode.OK) return ConstructVerifyConnectionResponse(response);
+            return response.Data == null ? new ConnectionVerificationResult(true, string.Empty) : ConstructVerifyConnectionResponse(response);
+        }
+
+        private static ConnectionVerificationResult ConstructVerifyConnectionResponse(IRestResponse response)
+        {
+            var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
+
+            if (response.ErrorException != null)
+            {
+                return new ConnectionVerificationResult(
+                    false,
+                    $"{errorMessageBase} {(!string.IsNullOrWhiteSpace(response.ErrorException.Message) ? response.ErrorException.Message : "This could be due to breaking changes in the external system")}."
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Content) && response.Content.Contains("API_KEY_INVALID"))
+            {
+                return new ConnectionVerificationResult(false, $"{errorMessageBase} This could be due to an invalid API key.");
+            }
+
+            var regex = new Regex(@"\<(html|head|body|div|span|img|p\>|a href)", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace);
+            var isHtml = regex.IsMatch(response.Content ?? string.Empty);
+
+            var errorMessage = response.IsSuccessful
+                ? string.Empty
+                : string.IsNullOrWhiteSpace(response.Content) || isHtml
+                    ? $"{errorMessageBase} This could be due to breaking changes in the external system."
+                    : $"{errorMessageBase} {response.Content}.";
+
+            return new ConnectionVerificationResult(response.IsSuccessful, errorMessage);
         }
 
         public IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)

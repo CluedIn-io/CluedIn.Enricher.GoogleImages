@@ -25,6 +25,5 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         public string ApiToken { get; set; }
         public string AcceptedEntityType { get; set; }
         public string OrgNameKey { get; set; }
-
     }
 }

@@ -16,7 +16,7 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
          **********************************************************************************************************/
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GoogleMapsProviderProviderComponent" /> class.
+        /// Initializes a new instance of the <see cref="GoogleImagesProviderProviderComponent" /> class.
         /// </summary>
         /// <param name="componentInfo">The component information.</param>
         public GoogleImagesProviderProviderComponent(ComponentInfo componentInfo) : base(componentInfo)
