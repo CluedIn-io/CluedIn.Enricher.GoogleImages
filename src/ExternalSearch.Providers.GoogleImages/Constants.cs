@@ -84,7 +84,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                 {
                     DisplayName = "Image Search Text",
                     Type = "vocabularyKeySelector",
-                    IsRequired = false,
+                    IsRequired = true,
                     Name = KeyName.ImageSearch,
                     Help = "The vocabulary key that contains the image search text you want to enrich (e.g., organization.name)."
                 }
