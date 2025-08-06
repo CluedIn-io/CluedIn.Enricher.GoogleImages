@@ -119,5 +119,20 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
         public IEnumerable<Control> Properties { get; } = Constants.Properties;
         public Guide Guide { get; } = Constants.Guide;
         public new IntegrationType Type { get; } = Constants.IntegrationType;
+        public bool SupportsEnricherV2 => true;
+        public Dictionary<string, object> ExtraInfo { get; } = new()
+        {
+            { "autoMap", false },
+            { "useEnricherOriginEntityCode", true },
+            { "supportConfidenceScore", false }, // for UI
+            { "minConfidenceScore", 0 }, // for UI
+            { "maxConfidenceScore", 100 }, // for UI
+            { "origin", Constants.ProviderName.ToCamelCase() },
+            { "originField", string.Empty },
+            { "nameKeyField", Constants.KeyName.ImageSearch },
+            { "vocabKeyPrefix", string.Empty},
+            { "autoSubmission", false },
+            { "dataSourceSetId", string.Empty },
+        };
     }
 }
