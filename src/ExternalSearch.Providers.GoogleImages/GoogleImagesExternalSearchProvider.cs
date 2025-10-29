@@ -67,8 +67,14 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             var existingResults = request.GetQueryResults<ImageDetailsResponse>(this).ToList();
 
             var entityType = request.EntityMetaData.EntityType;
+            var entityName = !string.IsNullOrEmpty(request.EntityMetaData.Name) ? request.EntityMetaData.Name : request.EntityMetaData.DisplayName;
 
             var organizationName = GetValue(request, config, Constants.KeyName.ImageSearch, Vocabularies.CluedInOrganization.OrganizationName);
+
+            if (!organizationName.Any())
+            {
+                throw new Exception($"Unable to generate queries for {entityName}. Name is empty");
+            }
 
             if (organizationName is { Count: > 0 })
             {
@@ -134,8 +140,6 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             }
             else switch (response.StatusCode)
             {
-                case HttpStatusCode.NoContent or HttpStatusCode.NotFound:
-                    yield break;
                 default:
                 {
                     if (response.ErrorException != null)
