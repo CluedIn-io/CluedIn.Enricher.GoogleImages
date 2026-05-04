@@ -128,7 +128,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
 
             if (!query.QueryParameters.TryGetValue("companyName", out var parameter)) yield break;
             var name = parameter.FirstOrDefault();
-            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.GET);
+            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.Get);
            
             var response = client.ExecuteAsync<ImageDetailsResponse>(request).Result;
                
@@ -230,7 +230,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             var apiToken = jobData.ApiToken;
             var client = new RestClient("https://www.googleapis.com/customsearch/v1");
             
-            var request = new RestRequest($"?key={apiToken}&cx=000950167190857528722:vf0rypkbf0w&q=Google&searchType=image", Method.GET);
+            var request = new RestRequest($"?key={apiToken}&cx=000950167190857528722:vf0rypkbf0w&q=Google&searchType=image", Method.Get);
 
             var response = client.ExecuteAsync<ImageDetailsResponse>(request).Result;
 
@@ -238,7 +238,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             return response.Data == null ? new ConnectionVerificationResult(true, string.Empty) : ConstructVerifyConnectionResponse(response);
         }
 
-        private static ConnectionVerificationResult ConstructVerifyConnectionResponse(IRestResponse response)
+        private static ConnectionVerificationResult ConstructVerifyConnectionResponse(RestResponse response)
         {
             var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
 
