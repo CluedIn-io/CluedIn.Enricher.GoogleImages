@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="CluedIn.Core" />
-    <PackageReference Include="ComponentHost" />
   </ItemGroup>
 
   <ItemGroup>
