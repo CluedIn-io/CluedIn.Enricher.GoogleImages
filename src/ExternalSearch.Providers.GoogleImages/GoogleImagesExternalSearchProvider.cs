@@ -204,7 +204,8 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         // ReSharper disable once UnusedParameter.Local
         private static void PopulateCompanyMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
         {
-            var code = new EntityCode(request.EntityMetaData.EntityType, "googleimages", $"{request.Queries.FirstOrDefault()?.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+            var queryKey = request.Queries.FirstOrDefault(x => x.Id == resultItem.QueryId)?.QueryKey ?? request.Queries.FirstOrDefault()?.QueryKey;
+            var code = new EntityCode(request.EntityMetaData.EntityType, "googleimages", $"{queryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
 
             metadata.EntityType = request.EntityMetaData.EntityType;
             metadata.Name = request.EntityMetaData.Name;
