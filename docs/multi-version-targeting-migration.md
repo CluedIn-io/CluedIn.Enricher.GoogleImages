@@ -141,4 +141,4 @@ confirmed `1.0.0`, not `5.0.x`.
 - [x] Source — `#if CLUEDIN_V50` guards for the RestSharp 106↔114 break (`GoogleImagesExternalSearchProvider.cs`)
 - [x] `GitVersion.yml` — `next-version: 1.0`; `commits-before` merged into the existing `ignore:` block, padded 2 days; verified `1.0.0` with the pinned GitVersion.Tool 5.9.0
 - [x] `src`/`test` build clean (0 errors) for all three legs, verified locally via real `dotnet build`
-- [ ] Push branch and confirm the actual Azure DevOps pipeline run is green end-to-end
+- [x] Pushed branch and confirmed the Azure DevOps pipeline is green end-to-end — PR #29, build 151984: all three legs + integration tests + `Multi-version: publish` passed
