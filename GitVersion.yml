@@ -1,5 +1,5 @@
 mode: ContinuousDeployment
-next-version: 5.0
+next-version: 1.0
 branches:
   master:
     mode: ContinuousDelivery
@@ -26,4 +26,5 @@ branches:
     - develop
 ignore:
   sha: []
+  commits-before: 2026-06-20T00:00:00
 

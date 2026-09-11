@@ -1,0 +1,43 @@
+<Project>
+  <PropertyGroup Label="Dependency Versions">
+	  <_AutoFixture>5.0.0-preview0012</_AutoFixture>
+	  <_CluedIn Condition="'$(_CluedIn)' == ''">5.0.0-*</_CluedIn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!--
+        Specified versions for dependencies in test projects
+        MUST SPECIFY IN CSPROJ AS <PackageReference Name="<depName>" />
+    -->
+    <PackageReference Update="coverlet.msbuild" Version="2.8.0" />
+    <PackageReference Update="Moq" Version="4.13.1" />
+    <!-- xunit v3 + Microsoft.NET.Test.Sdk 18.x + xunit.runner.visualstudio 3.x + AutoFixture.Xunit3 for net10.0 (CluedIn 5.0+) -->
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="18.3.0" Condition="$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <PackageReference Update="xunit.v3" Version="3.2.2" Condition="$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <PackageReference Update="xunit.runner.visualstudio" Version="3.1.5" Condition="$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <PackageReference Update="AutoFixture.Xunit3" Version="$(_AutoFixture)" Condition="$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <!-- xunit v2 + Microsoft.NET.Test.Sdk 17.x + xunit.runner.visualstudio 2.x + AutoFixture.Xunit2 for net6.0 (CluedIn < 5.0) -->
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.12.0" Condition="!$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <PackageReference Update="xunit" Version="2.9.3" Condition="!$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <PackageReference Update="xunit.runner.visualstudio" Version="2.8.2" Condition="!$(DefineConstants.Contains('CLUEDIN_V50'))" />
+    <PackageReference Update="AutoFixture.Xunit2" Version="4.18.0" Condition="!$(DefineConstants.Contains('CLUEDIN_V50'))" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--
+        Specified versions for dependencies across the solution
+        MUST SPECIFY IN CSPROJ AS <PackageReference Name="<depName>" />
+    -->
+    <PackageReference Update="CluedIn.Crawling" Version="$(_CluedIn)" />
+    <PackageReference Update="CluedIn.Core" Version="$(_CluedIn)" />
+    <PackageReference Update="CluedIn.ExternalSearch" Version="$(_CluedIn)" />
+  </ItemGroup>
+  <!-- CluedIn.Testing.Base/CluedIn.CrawlerIntegrationTesting publish under a version-suffixed
+       PackageId per CluedIn leg (dotless Major.Minor.Patch), not a single ID with $(_CluedIn) as
+       the version - confirmed against the develop feed (.470/.480/.500 all exist). -->
+  <PropertyGroup Label="Dependency Versions">
+    <_CluedInPackageSuffix>$(_CluedInVersionOnly.Replace('.', ''))</_CluedInPackageSuffix>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Update="CluedIn.Testing.Base.$(_CluedInPackageSuffix)" Version="1.0.0-*" />
+    <PackageReference Update="CluedIn.CrawlerIntegrationTesting.$(_CluedInPackageSuffix)" Version="1.0.0-*" />
+  </ItemGroup>
+</Project>
