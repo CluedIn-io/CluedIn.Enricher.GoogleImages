@@ -6,7 +6,6 @@ using CluedIn.ExternalSearch.Providers.GoogleImages;
 using CluedIn.Testing.Base.ExternalSearch;
 using Moq;
 using Xunit;
-using Xunit.Abstractions;
 
 //using TestContext = CluedIn.Tests.Unit.TestContext;
 
