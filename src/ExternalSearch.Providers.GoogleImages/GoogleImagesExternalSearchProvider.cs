@@ -24,6 +24,8 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
     {
         private static EntityType[] AcceptedEntityTypes = [EntityType.Organization];
 
+        private const int MaxPreviewImageDownloadAttempts = 5;
+
         /**********************************************************************************************************
          * CONSTRUCTORS
          **********************************************************************************************************/
@@ -168,7 +170,16 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             var clue = new Clue(code, context.Organization);
 
             PopulateCompanyMetadata(clue.Data.EntityData, companyResult, request);
-            DownloadPreviewImage(context, companyResult.Data.items.First().link, clue);
+
+            // The first result is often hosted on a site that blocks or throttles downloads (403, 429, HTML instead of an image),
+            // so fall back to the next results until one image can be downloaded.
+            foreach (var link in GetCandidateImageLinks(companyResult.Data))
+            {
+                DownloadPreviewImage(context, link, clue);
+
+                if (clue.Data.EntityData.PreviewImage != null)
+                    break;
+            }
             // TODO: If necessary, you can create multiple clues and return them.
 
             return [clue];
@@ -193,7 +204,26 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
         { 
-            return DownloadPreviewImageBlob<ImageDetailsResponse>(context, result, r => r.Data.items.First().link);
+            var response = result.As<ImageDetailsResponse>()?.Data;
+
+            foreach (var link in GetCandidateImageLinks(response))
+            {
+                var previewImage = DownloadPreviewImageBlob(context, link);
+
+                if (previewImage != null)
+                    return previewImage;
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> GetCandidateImageLinks(ImageDetailsResponse response)
+        {
+            return (response?.items ?? [])
+                .Select(item => item.link)
+                .Where(link => !string.IsNullOrWhiteSpace(link))
+                .Distinct()
+                .Take(MaxPreviewImageDownloadAttempts);
         }
 
         private static IEntityMetadata CreateCompanyMetadata(IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
