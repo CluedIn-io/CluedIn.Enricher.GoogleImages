@@ -10,6 +10,7 @@ using CluedIn.Core.Providers;
 using CluedIn.Core.Webhooks;
 using CluedIn.ExternalSearch;
 using CluedIn.ExternalSearch.Providers.GoogleImages;
+using CluedIn.ExternalSearch.Providers.GoogleImages.Vocabularies;
 using CluedIn.Providers.Models;
 using Constants = CluedIn.ExternalSearch.Providers.GoogleImages.Constants;
 
@@ -130,7 +131,7 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
             { "origin", Constants.ProviderName.ToCamelCase() },
             { "originField", string.Empty },
             { "nameKeyField", Constants.KeyName.ImageSearch },
-            { "vocabKeyPrefix", string.Empty},
+            { "vocabKeyPrefix", GoogleImagesVocabulary.Image.KeyPrefix },
             { "autoSubmission", false },
             { "dataSourceSetId", string.Empty },
         };

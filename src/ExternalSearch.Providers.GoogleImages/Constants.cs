@@ -50,6 +50,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             public const string ApiToken = "apiToken";
             public const string AcceptedEntityType = "acceptedEntityType";
             public const string ImageSearch = "imageSearchKey";
+            public const string SearchForLogo = "searchForLogo";
 
         }
 
@@ -87,6 +88,14 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
                     IsRequired = true,
                     Name = KeyName.ImageSearch,
                     Help = "The vocabulary key that contains the image search text you want to enrich (e.g., organization.name)."
+                },
+                new()
+                {
+                    DisplayName = "Search for logo",
+                    Type = "checkbox",
+                    IsRequired = false,
+                    Name = KeyName.SearchForLogo,
+                    Help = "When enabled, the enricher searches Google Images for logos instead of any image."
                 }
             }
         };
