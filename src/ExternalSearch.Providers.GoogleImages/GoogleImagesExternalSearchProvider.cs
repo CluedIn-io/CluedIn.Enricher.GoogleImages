@@ -7,6 +7,7 @@ using CluedIn.Core.ExternalSearch;
 using CluedIn.Core.Providers;
 using CluedIn.Core.Connectors;
 using CluedIn.ExternalSearch.Providers.GoogleImages.Models;
+using CluedIn.ExternalSearch.Providers.GoogleImages.Vocabularies;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,14 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
     public class GoogleImagesExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider, IExternalSearchProviderWithVerifyConnection
     {
         private static EntityType[] AcceptedEntityTypes = [EntityType.Organization];
+
+        // Google Custom Search returns one page of 10 image results per query.
+        private const int MaxImageCandidates = 10;
+        private const int MaxCluesPerResult = 10;
+
+        // The Preview Image mapping only downloads image urls with these extensions (see createClueImage in CluedIn.MicroServices),
+        // so other images (webp, svg, ...) would silently be left without a preview image.
+        private static readonly Regex MappableImageLink = new(@"\.(jpg|jpeg|gif|png)", RegexOptions.Compiled);
 
         /**********************************************************************************************************
          * CONSTRUCTORS
@@ -69,7 +78,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             var entityType = request.EntityMetaData.EntityType;
             var entityName = !string.IsNullOrEmpty(request.EntityMetaData.Name) ? request.EntityMetaData.Name : request.EntityMetaData.DisplayName;
 
-            var organizationName = GetValue(request, config, Constants.KeyName.ImageSearch, Vocabularies.CluedInOrganization.OrganizationName);
+            var organizationName = GetValue(request, config, Constants.KeyName.ImageSearch, CluedIn.Core.Data.Vocabularies.Vocabularies.CluedInOrganization.OrganizationName);
 
             if (!organizationName.Any())
             {
@@ -78,11 +87,13 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
 
             if (organizationName is { Count: > 0 })
             {
-                foreach (var nameValue in organizationName.Where(v => !NameFilter(v)))
+                var searchForLogo = IsSearchForLogoEnabled(config);
+
+                foreach (var searchTerm in organizationName.Select(v => searchForLogo ? $"{v} logo" : v).Where(v => !NameFilter(v)))
                 {
                     var companyDict = new Dictionary<string, string>
                                     {
-                                        {"companyName", nameValue }
+                                        {"companyName", searchTerm }
                                     };
                     yield return new ExternalSearchQuery(this, entityType, companyDict);
                 }
@@ -94,6 +105,14 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             {
                 return existingResults.Any(r => string.Equals(r.Data.queries.request.First().searchTerms, value, StringComparison.InvariantCultureIgnoreCase));
             }
+        }
+
+        private static bool IsSearchForLogoEnabled(IDictionary<string, object> config)
+        {
+            return config != null
+                   && config.TryGetValue(Constants.KeyName.SearchForLogo, out var value)
+                   && bool.TryParse(value?.ToString(), out var enabled)
+                   && enabled;
         }
 
         private static HashSet<string> GetValue(IExternalSearchRequest request, IDictionary<string, object> config, string keyName, VocabularyKey defaultKey)
@@ -122,16 +141,19 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             foreach (var externalSearchQueryResult in InternalExecuteSearch(query, apiKey)) yield return externalSearchQueryResult;
         }
 
-        private static IEnumerable<IExternalSearchQueryResult> InternalExecuteSearch(IExternalSearchQuery query, string apiKey)
+        private static IEnumerable<IExternalSearchQueryResult> InternalExecuteSearch(IExternalSearchQuery query, string apiKey, bool searchForLogo = false)
         {
             var client = new RestClient("https://www.googleapis.com/customsearch/v1");
 
             if (!query.QueryParameters.TryGetValue("companyName", out var parameter)) yield break;
             var name = parameter.FirstOrDefault();
+
+            // Logos are mostly classified as clipart by Google, so restrict to that type when searching for logos.
+            var logoFilter = searchForLogo ? "&imgType=clipart" : string.Empty;
 #if CLUEDIN_V50
-            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.Get);
+            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image{logoFilter}", Method.Get);
 #else
-            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image", Method.GET);
+            var request = new RestRequest($"?key={apiKey}&cx=000950167190857528722:vf0rypkbf0w&q={name}&searchType=image{logoFilter}", Method.GET);
 #endif
            
             var response = client.ExecuteAsync<ImageDetailsResponse>(request).Result;
@@ -164,14 +186,32 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         { 
             if (result is not IExternalSearchQueryResult<ImageDetailsResponse> companyResult) return null;
            
-            var code = new EntityCode(request.EntityMetaData.EntityType, "googleimages", $"{query.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
-            var clue = new Clue(code, context.Organization);
+            var clues = new List<Clue>();
 
-            PopulateCompanyMetadata(clue.Data.EntityData, companyResult, request);
-            DownloadPreviewImage(context, companyResult.Data.items.First().link, clue);
-            // TODO: If necessary, you can create multiple clues and return them.
+            // Results are often hosted on sites that block or throttle downloads (403, 429, HTML instead of an image),
+            // so only images that can be downloaded produce a clue.
+            foreach (var link in GetCandidateImageLinks(companyResult.Data).Where(link => MappableImageLink.IsMatch(link)))
+            {
+                // The image url is part of the entity code, so each image keeps its own identity across enrichments.
+                var code = CreateEntityCode(request, query.QueryKey, link);
+                var clue = new Clue(code, context.Organization);
 
-            return [clue];
+                PopulateCompanyMetadata(clue.Data.EntityData, companyResult, request, link);
+                DownloadPreviewImage(context, link, clue);
+
+                if (clue.Data.EntityData.PreviewImage == null)
+                    continue;
+
+                // The image url is a column that can be mapped as the Preview Image, which does not accept the blob preview.
+                clue.Data.EntityData.Properties[GoogleImagesVocabulary.Image.Logo] = link;
+
+                clues.Add(clue);
+
+                if (clues.Count >= MaxCluesPerResult)
+                    break;
+            }
+
+            return clues;
         }
 
         /// <summary>Gets the primary entity metadata.</summary>
@@ -193,7 +233,34 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
         { 
-            return DownloadPreviewImageBlob<ImageDetailsResponse>(context, result, r => r.Data.items.First().link);
+            var response = result.As<ImageDetailsResponse>()?.Data;
+
+            foreach (var link in GetCandidateImageLinks(response))
+            {
+                var previewImage = DownloadPreviewImageBlob(context, link);
+
+                if (previewImage != null)
+                    return previewImage;
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> GetCandidateImageLinks(ImageDetailsResponse response)
+        {
+            return (response?.items ?? [])
+                .Select(item => item.link)
+                .Where(link => !string.IsNullOrWhiteSpace(link))
+                .Distinct()
+                .Take(MaxImageCandidates);
+        }
+
+        // Without an image url (the primary entity metadata) the code stays the original one, so existing enriched data is still matched.
+        private static EntityCode CreateEntityCode(IExternalSearchRequest request, string queryKey, string imageLink = null)
+        {
+            var key = $"{queryKey}{request.EntityMetaData.OriginEntityCode}{imageLink}";
+
+            return new EntityCode(request.EntityMetaData.EntityType, "googleimages", key.ToDeterministicGuid());
         }
 
         private static IEntityMetadata CreateCompanyMetadata(IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
@@ -206,10 +273,10 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         }
 
         // ReSharper disable once UnusedParameter.Local
-        private static void PopulateCompanyMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request)
+        private static void PopulateCompanyMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<ImageDetailsResponse> resultItem, IExternalSearchRequest request, string imageLink = null)
         {
             var queryKey = request.Queries.FirstOrDefault(x => x.Id == resultItem.QueryId)?.QueryKey ?? request.Queries.FirstOrDefault()?.QueryKey;
-            var code = new EntityCode(request.EntityMetaData.EntityType, "googleimages", $"{queryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+            var code = CreateEntityCode(request, queryKey, imageLink);
 
             metadata.EntityType = request.EntityMetaData.EntityType;
             metadata.Name = request.EntityMetaData.Name;
@@ -289,7 +356,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
         {
             var jobData = new GoogleImagesExternalSearchJobData(config);
 
-            foreach (var externalSearchQueryResult in InternalExecuteSearch(query, jobData.ApiToken)) yield return externalSearchQueryResult;
+            foreach (var externalSearchQueryResult in InternalExecuteSearch(query, jobData.ApiToken, jobData.SearchForLogo)) yield return externalSearchQueryResult;
         }
 
         public IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
