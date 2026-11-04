@@ -10,7 +10,7 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             ApiToken = GetValue<string>(configuration, Constants.KeyName.ApiToken);
             AcceptedEntityType = GetValue<string>(configuration, Constants.KeyName.AcceptedEntityType);
             OrgNameKey = GetValue<string>(configuration, Constants.KeyName.ImageSearch);
-
+            SearchForLogo = GetValue<bool>(configuration, Constants.KeyName.SearchForLogo);
         }
 
         public IDictionary<string, object> ToDictionary()
@@ -18,12 +18,14 @@ namespace CluedIn.ExternalSearch.Providers.GoogleImages
             return new Dictionary<string, object> {
                 { Constants.KeyName.ApiToken, ApiToken },
                 { Constants.KeyName.AcceptedEntityType, AcceptedEntityType },
-                { Constants.KeyName.ImageSearch, OrgNameKey }
+                { Constants.KeyName.ImageSearch, OrgNameKey },
+                { Constants.KeyName.SearchForLogo, SearchForLogo }
             };
         }
 
         public string ApiToken { get; set; }
         public string AcceptedEntityType { get; set; }
         public string OrgNameKey { get; set; }
+        public bool SearchForLogo { get; set; }
     }
 }
