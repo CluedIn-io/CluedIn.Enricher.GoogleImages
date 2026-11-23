@@ -134,6 +134,7 @@ namespace CluedIn.Provider.ExternalSearch.GoogleImages
             { "vocabKeyPrefix", GoogleImagesVocabulary.Image.KeyPrefix },
             { "autoSubmission", false },
             { "dataSourceSetId", string.Empty },
+            { "fieldGroups", Constants.FieldGroups }, // for UI
         };
     }
 }
